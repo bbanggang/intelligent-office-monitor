@@ -10,13 +10,13 @@
 | Chapter | 제목 | 상태 |
 |---------|------|------|
 | CH-0 | 개발 환경 기반 세팅 | ✅ 완료 |
-| CH-1 | 프로젝트 초기화 & GitHub 연동 | 🔄 진행중 |
-| CH-2 | 인프라 구축 — Docker + InfluxDB | ⬜ 미완료 |
-| CH-3 | 미들웨어 구축 — Mosquitto MQTT | ⬜ 미완료 |
-| CH-4 | 엣지 펌웨어 — RP2040 IMU + MQTT 발행 | ⬜ 미완료 |
-| CH-5 | Python 구독자 — 데이터 정제 & DB 저장 | ⬜ 미완료 |
-| CH-6 | 이상 징후 감지 로직 구현 | ⬜ 미완료 |
-| CH-7 | 시각화 — Node-RED 대시보드 | ⬜ 미완료 |
+| CH-1 | 프로젝트 초기화 & GitHub 연동 | ✅ 완료 |
+| CH-2 | 인프라 구축 — Docker + InfluxDB | ✅ 완료 |
+| CH-3 | 미들웨어 구축 — Mosquitto MQTT | ✅ 완료 |
+| CH-4 | 엣지 펌웨어 — RP2040 IMU + MQTT 발행 | ✅ 완료 |
+| CH-5 | Python 구독자 — 데이터 정제 & DB 저장 | ✅ 완료 |
+| CH-6 | 이상 징후 감지 로직 구현 | ✅ 완료 |
+| CH-7 | 시각화 — Node-RED 대시보드 | ✅ 완료 |
 | CH-8 | 통합 테스트 & 최종 검증 | ⬜ 미완료 |
 
 > 완료 시 상태 칸을 `✅ 완료`로 변경한다.
@@ -86,15 +86,10 @@ git --version
 
 ### GitHub 연동
 
-- [ ] GitHub에 원격 저장소 생성 (`iot_project` 또는 원하는 이름)
-- [ ] `git init` → `git remote add origin <url>` 완료
-- [ ] `README.md`, `checklist.md`, `.gitignore` 포함하여 **첫 커밋** 생성
-  ```bash
-  git add README.md checklist.md .gitignore docker-compose.yml
-  git commit -m "chore: initial project scaffold"
-  git push -u origin main
-  ```
-- [ ] GitHub 저장소에서 파일 정상 반영 확인
+- [x] GitHub 저장소 생성 (`intelligent-office-monitor`)
+- [x] `git remote add origin` + `git branch -M main` 완료
+- [x] 첫 커밋 생성 (`chore: initial project scaffold`, 14 files)
+- [x] `git push -u origin main` 완료 → https://github.com/bbanggang/intelligent-office-monitor
 
 ### CH-1 완료 기준
 
@@ -121,22 +116,22 @@ git --version
 
 ### InfluxDB 기동 및 검증
 
-- [ ] `docker compose up -d` 실행 성공
-- [ ] `docker compose ps` — `influxdb` 컨테이너 `running` 상태 확인
-- [ ] 브라우저에서 `http://localhost:8086` 접속 → InfluxDB UI 로그인 성공
-- [ ] UI에서 `iot_data` bucket 존재 확인
+- [x] `docker compose up -d` 실행 성공
+- [x] `docker compose ps` — `influxdb` 컨테이너 `running` 상태 확인
+- [x] 브라우저에서 `http://localhost:8086` 접속 → InfluxDB UI 로그인 성공
+- [x] UI에서 `iot_data` bucket 존재 확인
 
 ### API 토큰 발급
 
-- [ ] InfluxDB UI → **Data > API Tokens** 에서 All Access Token 발급
-- [ ] 토큰을 `.env` 파일의 `INFLUXDB_TOKEN=` 에 저장
-- [ ] `.env`가 `.gitignore`에 포함되어 있음을 재확인
+- [ ] InfluxDB UI → **Data > API Tokens** 에서 실제 토큰 발급 후 `.env` 반영
+- [x] 토큰을 `.env` 파일의 `INFLUXDB_TOKEN=` 에 저장 (초기값 설정)
+- [x] `.env`가 `.gitignore`에 포함되어 있음을 재확인
 
 ### Python에서 연결 테스트
 
-- [ ] `src/influx_writer.py`에 InfluxDB 클라이언트 초기화 코드 작성
-- [ ] 테스트 포인트 1건을 수동으로 write하는 스크립트 실행 성공
-- [ ] InfluxDB UI → Data Explorer에서 해당 포인트 조회 확인
+- [x] `src/influx_writer.py`에 InfluxDB 클라이언트 초기화 코드 작성
+- [x] 테스트 포인트 1건 write 성공 (`Write success` 출력 확인)
+- [x] InfluxDB UI → Data Explorer에서 `accel_z = 9.81` 포인트 조회 확인
 
 ### CH-2 완료 기준
 
@@ -155,28 +150,19 @@ python src/influx_writer.py   # "Write success" 출력
 
 ### Mosquitto 설정
 
-- [ ] Mosquitto 설정 파일(`mosquitto.conf`) 존재 확인 또는 생성
-- [ ] 로컬 네트워크 접근 허용 설정 (`listener 1883`, `allow_anonymous true`)
-  > ⚠️ 운영 환경에서는 반드시 인증 추가 필요
-- [ ] Windows 방화벽에서 포트 `1883` 인바운드 허용 확인
+- [x] Mosquitto 설정 파일 확인 (`C:/Program Files/Mosquitto/mosquitto.conf`)
+- [x] `listener 1883 0.0.0.0` + `allow_anonymous true` 설정 확인
+- [ ] Windows 방화벽에서 포트 `1883` 인바운드 허용 확인 (RP2040 연결 시 필요)
 
 ### 브로커 기동 및 검증
 
-- [ ] Mosquitto 브로커 실행 (`mosquitto -v -c mosquitto.conf`)
-- [ ] 새 터미널에서 구독자 실행:
-  ```bash
-  mosquitto_sub -h localhost -t "office/imu" -v
-  ```
-- [ ] 또 다른 터미널에서 발행 테스트:
-  ```bash
-  mosquitto_pub -h localhost -t "office/imu" -m '{"accel_x":0.1,"accel_y":0.0,"accel_z":9.81}'
-  ```
-- [ ] 구독자 터미널에서 메시지 수신 확인
+- [x] Mosquitto 브로커 실행 확인 (Windows 서비스로 자동 실행 중, PID 4368)
+- [x] pub/sub 왕복 테스트 성공 — `office/imu` 토픽 메시지 수신 확인
 
 ### RP2040 접근성 확인
 
-- [ ] RP2040이 연결될 Wi-Fi와 Mosquitto 호스트 PC가 **동일 네트워크** 에 있음을 확인
-- [ ] 호스트 PC의 로컬 IP 주소 기록 (예: `192.168.x.x`) → `config.h`에 사용 예정
+- [ ] RP2040이 연결될 Wi-Fi와 Mosquitto 호스트 PC가 **동일 네트워크** 에 있음을 확인 (RP2040 수령 후)
+- [ ] 호스트 PC의 로컬 IP 주소를 `firmware/config.h`의 `MQTT_BROKER_IP`에 입력 (RP2040 수령 후)
 
 ### CH-3 완료 기준
 

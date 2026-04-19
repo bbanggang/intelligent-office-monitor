@@ -22,6 +22,7 @@ import time
 from collections import defaultdict
 
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
 from dotenv import load_dotenv
 
 import influx_writer
@@ -39,12 +40,12 @@ buffer = defaultdict(list)
 window_start = time.time()
 
 
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print(f"[MQTT] Connected — subscribing to '{TOPIC}'")
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print(f"[MQTT] Connected - subscribing to '{TOPIC}'")
         client.subscribe(TOPIC)
     else:
-        print(f"[MQTT] Connection failed: rc={rc}")
+        print(f"[MQTT] Connection failed: {reason_code}")
 
 
 def on_message(client, userdata, msg):
@@ -53,7 +54,7 @@ def on_message(client, userdata, msg):
     try:
         data = json.loads(msg.payload)
     except json.JSONDecodeError:
-        print("[WARN] Invalid JSON payload — skipped")
+        print("[WARN] Invalid JSON payload - skipped")
         return
 
     for key in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
@@ -72,7 +73,7 @@ def on_message(client, userdata, msg):
 
 
 def main():
-    client = mqtt.Client()
+    client = mqtt.Client(CallbackAPIVersion.VERSION2)
     client.on_connect = on_connect
     client.on_message = on_message
 
