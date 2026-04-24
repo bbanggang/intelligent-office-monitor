@@ -1,0 +1,273 @@
+{
+  "id": null,
+  "uid": "imu-office-monitor",
+  "title": "Intelligent Office Monitor",
+  "tags": ["iot", "imu", "office"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "2s",
+  "time": { "from": "now-5m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "accel_z (m/s²)",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "ms2",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 12 },
+              { "color": "red", "value": 16 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -10s)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\" and r._field == \"accel_z\")\n  |> last()",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "gyro_x (deg/s)",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "rotateDeg",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -10s)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\" and r._field == \"gyro_x\")\n  |> last()",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "이상 감지 횟수 (최근 1시간)",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["count"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"anomaly_events\")\n  |> filter(fn: (r) => r._field == \"accel_z\")",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 4,
+      "type": "gauge",
+      "title": "가속도 벡터 크기 (m/s²)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "min": 0,
+          "max": 25,
+          "unit": "ms2",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 12 },
+              { "color": "red", "value": 18 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -10s)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\" and r._field == \"accel_z\")\n  |> last()\n  |> map(fn: (r) => ({r with _value: math.abs(x: r._value)}))",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 5,
+      "type": "gauge",
+      "title": "자이로 최대 각속도 (deg/s)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "min": 0,
+          "max": 400,
+          "unit": "rotateDeg",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -10s)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\")\n  |> filter(fn: (r) => r._field == \"gyro_x\" or r._field == \"gyro_y\" or r._field == \"gyro_z\")\n  |> last()\n  |> max()",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Accelerometer — accel_x / accel_y / accel_z (m/s²)",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 9 },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms2",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "accel_x" }, "properties": [{ "id": "color", "value": { "fixedColor": "#1f77b4", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "accel_y" }, "properties": [{ "id": "color", "value": { "fixedColor": "#ff7f0e", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "accel_z" }, "properties": [{ "id": "color", "value": { "fixedColor": "#2ca02c", "mode": "fixed" } }] }
+        ]
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\")\n  |> filter(fn: (r) => r._field == \"accel_x\" or r._field == \"accel_y\" or r._field == \"accel_z\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Gyroscope — gyro_x / gyro_y / gyro_z (deg/s)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 9 },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotateDeg",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "gyro_x" }, "properties": [{ "id": "color", "value": { "fixedColor": "#d62728", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "gyro_y" }, "properties": [{ "id": "color", "value": { "fixedColor": "#9467bd", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "gyro_z" }, "properties": [{ "id": "color", "value": { "fixedColor": "#8c564b", "mode": "fixed" } }] }
+        ]
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"imu_averaged\")\n  |> filter(fn: (r) => r._field == \"gyro_x\" or r._field == \"gyro_y\" or r._field == \"gyro_z\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "이상 감지 이벤트 로그",
+      "gridPos": { "x": 0, "y": 13, "w": 24, "h": 7 },
+      "options": {
+        "sortBy": [{ "displayName": "Time", "desc": true }],
+        "footer": { "show": false }
+      },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "accel_z" },
+            "properties": [
+              { "id": "custom.width", "value": 120 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 15 }] } },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "custom.width", "value": 100 },
+              { "id": "custom.displayMode", "value": "color-background" },
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "targets": [{
+        "datasource": "InfluxDB",
+        "query": "from(bucket: \"iot_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"anomaly_events\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> keep(columns: [\"_time\", \"severity\", \"accel_x\", \"accel_y\", \"accel_z\", \"gyro_x\", \"gyro_y\", \"gyro_z\"])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 20)",
+        "refId": "A"
+      }]
+    }
+  ]
+}
