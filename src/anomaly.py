@@ -14,6 +14,7 @@
 # =============================================================================
 
 import math
+import json
 
 GYRO_THRESHOLD = 50.0   # deg/s — 급격한 기울기 기준
 IMPACT_THRESHOLD = 15.0  # m/s² — 중력 가속도 편차 기준
@@ -36,14 +37,23 @@ def detect_impact_anomaly(data: dict) -> bool:
 
 
 def process_anomaly(data: dict, influx_writer, mqtt_client, alert_topic: str):
-    if not (detect_tilt_anomaly(data) or detect_impact_anomaly(data)):
+    is_tilt = detect_tilt_anomaly(data)
+    is_impact = detect_impact_anomaly(data)
+
+    if not (is_tilt or is_impact):
         return
 
+    anomaly_type = []
+    if is_tilt:
+        anomaly_type.append("tilt")
+    if is_impact:
+        anomaly_type.append("impact")
+
     event = {
-        "type": "anomaly",
+        "type": "+".join(anomaly_type),
         "severity": "HIGH",
         "data": data,
     }
     influx_writer.write_event(event)
-    mqtt_client.publish(alert_topic, str(event))
+    mqtt_client.publish(alert_topic, json.dumps(event))
     print(f"[ANOMALY DETECTED] {event}")

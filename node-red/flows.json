@@ -242,7 +242,7 @@
     "type": "function",
     "z": "flow_main",
     "name": "Format Alert",
-    "func": "var now = new Date().toLocaleTimeString();\nmsg.payload = \"[\" + now + \"] ANOMALY DETECTED — \" + msg.payload;\nreturn msg;",
+    "func": "var now = new Date().toLocaleTimeString();\ntry {\n  var alert = JSON.parse(msg.payload);\n  var typeMap = {\n    'tilt': '급격한 기울기/회전 감지',\n    'impact': '물리적 충격 감지',\n    'tilt+impact': '기울기 및 충격 동시 감지'\n  };\n  var desc = typeMap[alert.type] || '이상 감지';\n  msg.payload = '[' + now + '] ⚠ ' + desc + ' (심각도: ' + alert.severity + ')';\n} catch(e) {\n  msg.payload = '[' + now + '] ⚠ 이상 감지';\n}\nreturn msg;",
     "outputs": 1,
     "x": 320,
     "y": 360,
